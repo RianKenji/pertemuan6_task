@@ -1,35 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:pertemuan6/models/data_layer.dart';
+import 'package:pertemuan6/plan_provider.dart';
+import 'package:pertemuan6/views/plan_creator_screen.dart';
+
 
 class PlanScreen extends StatefulWidget{
+  final Plan plan;
+  const PlanScreen({Key? key, required this.plan}) : super (key: key);
+  
   State createState() => _PlanScreenState();
 }
 
 class _PlanScreenState extends State<PlanScreen> {
-  final plan = Plan();
+  late ScrollController scrollController;
+
+  Plan get plan => widget.plan;
+
+  void initState(){
+    super.initState();
+    scrollController = ScrollController()..addListener(() {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
 
   Widget build (BuildContext context){
+    //final plan = PlanProvider.of(context);
     return Scaffold(
       appBar: AppBar(title: Text('Master Plan')),
-      body: _buildList(),
+      body: Column(children: <Widget>[
+        Expanded(child: _buildList()),
+        SafeArea(child: Text(plan!.completenessMessage)),
+      ],),
       floatingActionButton: _buildAddTaskButton(),
     );
   }
 
   Widget _buildAddTaskButton(){
+    //final plan = PlanProvider.of(context);
     return FloatingActionButton(
       child: Icon(Icons.add),
       onPressed: (){
         setState(() {
-          plan.tasks.add(Task());
+          plan!.tasks.add(Task());
         });
       },
     );
   }
 
   Widget _buildList(){
+    //final plan = PlanProvider.of(context);
     return ListView.builder(
-        itemCount: plan.tasks.length,
+        controller: scrollController,
+        itemCount: plan!.tasks.length,
         itemBuilder: (context, index) => _buildTaskTile(plan.tasks[index])
     );
   }
@@ -44,8 +66,9 @@ class _PlanScreenState extends State<PlanScreen> {
           });
         },
       ),
-      title: TextField(
-        onChanged: (text){
+      title: TextFormField(
+        initialValue: task.description,
+        onFieldSubmitted: (text){
           setState(() {
             task.description = text;
           });
