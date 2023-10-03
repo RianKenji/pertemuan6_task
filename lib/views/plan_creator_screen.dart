@@ -49,8 +49,8 @@ class _CreatePlanState extends State<PlanCreatorScreen>{
       return;
     }
 
-    final plan = Plan()..name = text;
-    PlanProvider.of(context)!.add(plan);
+    final controller = PlanProvider.of(context);
+    controller?.addNewPlan(text);
     textController.clear();
     FocusScope.of(context).requestFocus(FocusNode());
     setState(() {
@@ -59,7 +59,7 @@ class _CreatePlanState extends State<PlanCreatorScreen>{
   }
 
   Widget _buildMasterPlans(){
-    final plans = PlanProvider.of(context);
+    final plans = PlanProvider.of(context)?.plans;
     if (plans!.isEmpty){
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -71,18 +71,29 @@ class _CreatePlanState extends State<PlanCreatorScreen>{
     }
     return ListView.builder(
       itemCount: plans.length,
-      itemBuilder: (context, index){
+      itemBuilder: (context, index) {
         final plan = plans[index];
-        return ListTile(
-          title: Text(plan.name),
-          subtitle: Text(plan.completenessMessage),
-          onTap: (){
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => PlanScreen(plan: plan)));
-          },
+        return Dismissible(
+            key: ValueKey(plan),
+            background: Container(color: Colors.red),
+            direction: DismissDirection.endToStart,
+            onDismissed: (_) {
+              final controller = PlanProvider.of(context);
+              controller?.deletePlan(plan);
+              setState(() {
+
+              });
+            },
+            child: ListTile(
+                title: Text(plan.name),
+                subtitle: Text(plan.completenessMessage),
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => PlanScreen(plan: plan)));
+                })
         );
-      }
-    );
+      });
 
   }
 

@@ -25,14 +25,22 @@ class _PlanScreenState extends State<PlanScreen> {
 
   Widget build (BuildContext context){
     //final plan = PlanProvider.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text('Master Plan')),
-      body: Column(children: <Widget>[
-        Expanded(child: _buildList()),
-        SafeArea(child: Text(plan!.completenessMessage)),
-      ],),
-      floatingActionButton: _buildAddTaskButton(),
-    );
+    return WillPopScope(
+        child:Scaffold(
+          appBar: AppBar(title: Text('Master Plan')),
+          body: Column(children: <Widget>[
+            Expanded(child: _buildList()),
+            SafeArea(child: Text(plan!.completenessMessage)),
+          ],),
+          floatingActionButton: _buildAddTaskButton(),
+        ),
+        onWillPop: (){
+          final controller = PlanProvider.of(context);
+          controller?.savePlan(plan);
+          return Future.value(true);
+        });
+
+
   }
 
   Widget _buildAddTaskButton(){
@@ -40,8 +48,10 @@ class _PlanScreenState extends State<PlanScreen> {
     return FloatingActionButton(
       child: Icon(Icons.add),
       onPressed: (){
+        final controller = PlanProvider.of(context);
+        controller?.createNewTask(plan);
         setState(() {
-          plan!.tasks.add(Task());
+
         });
       },
     );
@@ -57,23 +67,35 @@ class _PlanScreenState extends State<PlanScreen> {
   }
 
   Widget _buildTaskTile(Task task){
-    return ListTile(
-      leading: Checkbox(
-        value: task.complete,
-        onChanged: (selected){
+    return Dismissible(
+        key: ValueKey(task),
+        background: Container(color: Colors.red),
+        direction: DismissDirection.startToEnd,
+        onDismissed: (_){
+          final controller = PlanProvider.of(context);
+          controller?.deleteTask(plan, task);
           setState(() {
-            task.complete = selected!;
+
           });
         },
-      ),
-      title: TextFormField(
-        initialValue: task.description,
-        onFieldSubmitted: (text){
-          setState(() {
-            task.description = text;
-          });
-        },
-      ),
+        child: ListTile(
+          leading: Checkbox(
+            value: task.complete,
+            onChanged: (selected){
+              setState(() {
+                task.complete = selected!;
+              });
+            },
+          ),
+          title: TextFormField(
+            initialValue: task.description,
+            onFieldSubmitted: (text){
+              setState(() {
+                task.description = text;
+              });
+            },
+          ),
+        )
     );
   }
 
